@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kvízová aplikace</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .answers button {
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #fff;
+            transition: background-color 0.3s;
+        }
+        .answers button:hover {
+            background-color: #f0f0f0;
+        }
+        .results {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        .export {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="quiz">
+            <div class="question" id="question">Načítání...</div>
+            <div class="answers" id="answers"></div>
+        </div>
+        <div class="results" id="results" style="display: none;"></div>
+        <button class="export" id="export" style="display: none;">Exportovat výsledky</button>
+    </div>
+
+    <script>
+        const questions = [
+            /* Placeholder for dynamically loaded questions */
+        ];
+
+        // Simulated example of parsed questions (this would be loaded dynamically in practice)
+        const allQuestions = [
+            {
+                question: "Hospodaření a nakládání s majetkem obcí a krajů je:",
+                answers: [
+                    { text: "v jejich přenesené působnosti", correct: false },
+                    { text: "toto oprávnění nenáleží ani do samostatné, ani do přenesené působnosti", correct: false },
+                    { text: "pouze v samostatné působnosti", correct: false },
+                    { text: "zčásti v přenesené a zčásti v samostatné působnosti", correct: true }
+                ],
+                points: 1
+            },
+            {
+                question: "Zastupitelé obecního zastupitelstva jsou:",
+                answers: [
+                    { text: "voleni radou obce v komunálních volbách, které se konají každé 4 roky", correct: false },
+                    { text: "jmenováni starostou obce", correct: false },
+                    { text: "voleni občany obce v komunálních volbách, které se konají každé 4 roky", correct: true },
+                    { text: "jsou jmenováni krajským úřadem na návrh hejtmana", correct: false }
+                ],
+                points: 1
+            },
+            {
+                question: "Občanskoprávní jednání je:",
+                answers: [
+                    { text: "soudní rozsudek", correct: false },
+                    { text: "rozhodnutí občanskoprávního soudu", correct: false },
+                    { text: "pouze projev vůle státního orgánu směřující zejména ke vzniku, změně nebo zániku, těch práv a povinností, které právní předpisy s takovým projevem spojují", correct: false },
+                    { text: "projev vůle fyzické nebo právnické osoby, směřující zejména ke vzniku, změně nebo zániku, těch práv a povinností, které právní předpisy s takovým projevem spojují", correct: true }
+                ],
+                points: 1
+            }
+        ];
+
+        function generateTest(questionsPool, targetPoints) {
+            const shuffledQuestions = [...questionsPool].sort(() => 0.5 - Math.random());
+            const selectedQuestions = [];
+            let totalPoints = 0;
+
+            for (const question of shuffledQuestions) {
+                if (totalPoints + question.points <= targetPoints) {
+                    selectedQuestions.push(question);
+                    totalPoints += question.points;
+                }
+
+                if (totalPoints === targetPoints) break;
+            }
+
+            return selectedQuestions;
+        }
+
+        const testQuestions = generateTest(allQuestions, 50);
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionEl = document.getElementById('question');
+        const answersEl = document.getElementById('answers');
+        const resultsEl = document.getElementById('results');
+        const exportBtn = document.getElementById('export');
+
+        function loadQuestion() {
+            const question = testQuestions[currentQuestionIndex];
+            questionEl.textContent = question.question;
+            answersEl.innerHTML = '';
+
+            question.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.textContent = answer.text;
+                button.onclick = () => selectAnswer(answer.correct, question.points);
+                answersEl.appendChild(button);
+            });
+        }
+
+        function selectAnswer(correct, points) {
+            if (correct) {
+                score += points;
+            } else {
+                score -= 0.75;
+            }
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < testQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            questionEl.style.display = 'none';
+            answersEl.style.display = 'none';
+            resultsEl.style.display = 'block';
+            exportBtn.style.display = 'block';
+
+            resultsEl.textContent = `Vaše skóre: ${score.toFixed(2)} bodů z 50`;
+        }
+
+        exportBtn.onclick = () => {
+            const blob = new Blob([`Vaše skóre: ${score.toFixed(2)} bodů z 50`], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'vysledky.txt';
+            link.click();
+        };
+
+        loadQuestion();
+    </script>
+</body>
+</html>
